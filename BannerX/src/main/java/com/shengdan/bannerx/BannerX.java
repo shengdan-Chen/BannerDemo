@@ -160,7 +160,7 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
         VideoView player = (VideoView) itemView.getTag();
         //取出当前的播放器控件，开启播放
         if (player != null) {
-            Log.d(TAG, "startVideoPlay: 视频");
+            Log.d(TAG, "startVideoPlay: 视频 当前播放器状态 "+player.getCurrentPlayState());
             //如果播放完成了 则重播
             if (player.getCurrentPlayState() == STATE_PLAYBACK_COMPLETED){
                 Log.d(TAG, "startVideoPlay: 播放完成，重新播放");
@@ -285,6 +285,7 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
 
     @Override
     public void onPlayerStateChanged(int playerState) {
+        Log.d(TAG, "onPlayerStateChanged:  当前播放器状态"+playerState);
 
     }
 
