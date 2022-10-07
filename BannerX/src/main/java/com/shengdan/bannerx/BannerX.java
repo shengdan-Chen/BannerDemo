@@ -49,6 +49,7 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
         public boolean handleMessage(@NonNull Message msg) {
             switch (msg.what) {
                 case slideWhat:
+                    //处理轮播
                     index++;
                     if (index > dataList.size() - 1) {
                         index = 2;
@@ -221,8 +222,6 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
         if (recyclerView == null || bannerAdapter == null) return;
         lifecycle.addObserver(this);
         dataList = addFooterAndHeader(newBannerData);
-//        dataList = newBannerData;
-
         recyclerView.setItemViewCacheSize(dataList.size());
         bannerAdapter.setData(dataList);
         recyclerView.scrollToPosition(1);
@@ -290,7 +289,7 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
         Log.d(TAG, "onPlayStateChanged: "+playState);
         //如果是网络异常，30s后才会走STATE_ERROR，如果是路径错误或格式异常，立刻走PLAYBACK_POSITION_UNKNOWN
         if (playState == STATE_PLAYBACK_COMPLETED || playState == STATE_ERROR || playState == PLAYBACK_POSITION_UNKNOWN
-                || playState == STATE_NONE) {
+               ) {
             slideHandler.sendEmptyMessage(slideWhat);
         }
     }

@@ -38,9 +38,11 @@ public class ViewPagerLayoutManager extends LinearLayoutManager implements Recyc
     public void onScrollStateChanged(int state) {
         if (state == RecyclerView.SCROLL_STATE_IDLE) {
             View viewIdle = mPagerSnapHelper.findSnapView(ViewPagerLayoutManager.this);
-            int positionIdle = getPosition(viewIdle);
-            if (mOnViewPagerListener != null && getChildCount() == 1) {
-                mOnViewPagerListener.onPageSelected(positionIdle, positionIdle == getItemCount() - 1);
+            if (viewIdle != null){
+                int positionIdle = getPosition(viewIdle);
+                if (mOnViewPagerListener != null && getChildCount() == 1) {
+                    mOnViewPagerListener.onPageSelected(positionIdle, positionIdle == getItemCount() - 1);
+                }
             }
         }
     }
