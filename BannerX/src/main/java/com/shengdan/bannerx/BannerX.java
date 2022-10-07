@@ -125,8 +125,8 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
                 RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
                 int lastItemPosition;//最后可见 右边
                 int firstItemPosition;//第一次可见 右边
-
                 if (layoutManager instanceof LinearLayoutManager) {
+                    Log.d(TAG, "onScrolled: 滑动回调");
                     LinearLayoutManager linearManager = (LinearLayoutManager) layoutManager;
                     lastItemPosition = linearManager.findLastVisibleItemPosition();
                     firstItemPosition = linearManager.findFirstVisibleItemPosition();
@@ -136,9 +136,9 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
                     } else if ((firstItemPosition == lastItemPosition) && lastItemPosition == 0) {
                         //移动到头部了，移至倒数第二项
                         recyclerView.scrollToPosition(dataList.size() - 2);
-                    } else
-                        if (firstItemPosition == lastItemPosition) {
+                    } else if (firstItemPosition == lastItemPosition) {
                         //移动完成，在这里控制开启视频播放，上面的那个onPageRelease主要用来释放回调
+                        Log.d(TAG, "onScrolled: 相同");
                         startVideoPlay(firstItemPosition);
                     }
 
@@ -160,16 +160,20 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
         VideoView player = (VideoView) itemView.getTag();
         //取出当前的播放器控件，开启播放
         if (player != null) {
+            Log.d(TAG, "startVideoPlay: 视频");
             //如果播放完成了 则重播
             if (player.getCurrentPlayState() == STATE_PLAYBACK_COMPLETED){
+                Log.d(TAG, "startVideoPlay: 播放完成，重新播放");
                 player.replay(true);
                 player.start();
             }else{
+                Log.d(TAG, "startVideoPlay: 开始播放");
                 player.start();
             }
 
             //如果时跟随视频时长而移动的item，则注册监听；而后在item移走时移除
             if (dataList.get(firstItemPosition).getTime() == FROM_VIDEO){
+                Log.d(TAG, "startVideoPlay: 根据视频时长播放");
                 slideHandler.removeMessages(slideWhat);
                 player.setOnStateChangeListener(BannerX.this);
             }
