@@ -2,6 +2,7 @@ package com.shengdan.bannerx;
 
 import static android.media.session.PlaybackState.PLAYBACK_POSITION_UNKNOWN;
 import static android.media.session.PlaybackState.STATE_ERROR;
+import static android.media.session.PlaybackState.STATE_NONE;
 import static com.shengdan.bannerx.BannerXConst.FROM_VIDEO;
 import static xyz.doikki.videoplayer.player.BaseVideoView.STATE_PLAYBACK_COMPLETED;
 
@@ -286,8 +287,10 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
 
     @Override
     public void onPlayStateChanged(int playState) {
+        Log.d(TAG, "onPlayStateChanged: "+playState);
         //如果是网络异常，30s后才会走STATE_ERROR，如果是路径错误或格式异常，立刻走PLAYBACK_POSITION_UNKNOWN
-        if (playState == STATE_PLAYBACK_COMPLETED || playState == STATE_ERROR || playState == PLAYBACK_POSITION_UNKNOWN) {
+        if (playState == STATE_PLAYBACK_COMPLETED || playState == STATE_ERROR || playState == PLAYBACK_POSITION_UNKNOWN
+                || playState == STATE_NONE) {
             slideHandler.sendEmptyMessage(slideWhat);
         }
     }
