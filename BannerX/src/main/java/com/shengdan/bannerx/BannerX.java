@@ -37,9 +37,11 @@ import xyz.doikki.videoplayer.player.BaseVideoView;
 import xyz.doikki.videoplayer.player.VideoView;
 
 public class BannerX extends LinearLayout implements LifecycleObserver, BaseVideoView.OnStateChangeListener {
+    private String TAG = getClass().getSimpleName();
+
     private RecyclerView recyclerView;
     private BannerAdapter bannerAdapter;
-    private String TAG = getClass().getSimpleName();
+
     private List<BannerItemEntity> dataList = new ArrayList<>();
     private int index = 1;
     private final int slideWhat = 1, changeDurationWhat = 2;
@@ -52,6 +54,7 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
                     //处理轮播
                     index++;
                     if (index > dataList.size() - 1) {
+                        //因为下面onScrolled回调中，已经将其移动到最后一项了，所以这里是移动到第2项
                         index = 2;
                     }
                     recyclerView.smoothScrollToPosition(index);
@@ -98,16 +101,18 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
         layoutManager.setOnViewPagerListener(new OnViewPagerListener() {
             @Override
             public void onInitComplete() {
+                //初始化
             }
 
             @Override
             public void onPageRelease(boolean isNext, int position) {
+                //每次滑过一个item会走这个回调，在这控制关闭视频
                 stopVideoPlay();
             }
 
             @Override
             public void onPageSelected(int position, boolean isBottom) {
-
+                //当前滑动完成
             }
         });
 
@@ -122,6 +127,7 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
 
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                //每次滑动都会走这个回调
                 RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
                 int lastItemPosition;//最后可见 右边
                 int firstItemPosition;//第一次可见 右边
@@ -154,14 +160,23 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
      * @param firstItemPosition 在firstItemPosition == lastItemPosition时调用，随便选一个传入即可
      */
     private void startVideoPlay(int firstItemPosition) {
-        if (isSlide)changeSlideMsg(firstItemPosition);//同步修改自动轮播的index
+        //因为有自动轮播效果，因此需要同步修改自动轮播的index，否则下次轮播会错乱
+        if (isSlide)changeSlideMsg(firstItemPosition);
 
         View itemView = recyclerView.getChildAt(0);
         VideoView player = (VideoView) itemView.getTag();
         //取出当前的播放器控件，开启播放
         if (player != null) {
+            //如果时跟随视频时长而移动的item，则注册监听,在移走原定的切换msg，注册监听播放结束后移除
+            // 在item移走时移除监听器
+            if (dataList.get(firstItemPosition).getTime() == FROM_VIDEO){
+                Log.d(TAG, "startVideoPlay: 根据视频时长播放");
+                slideHandler.removeMessages(slideWhat);
+                player.setOnStateChangeListener(BannerX.this);
+            }
+
             Log.d(TAG, "startVideoPlay: 视频 当前播放器状态 "+player.getCurrentPlayState());
-            //如果播放完成了 则重播
+            //如果播放完成了 则重播，未播放完成则调用start开始播放
             if (player.getCurrentPlayState() == STATE_PLAYBACK_COMPLETED){
                 Log.d(TAG, "startVideoPlay: 播放完成，重新播放");
                 player.replay(true);
@@ -169,13 +184,6 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
             }else{
                 Log.d(TAG, "startVideoPlay: 开始播放");
                 player.start();
-            }
-
-            //如果时跟随视频时长而移动的item，则注册监听；而后在item移走时移除
-            if (dataList.get(firstItemPosition).getTime() == FROM_VIDEO){
-                Log.d(TAG, "startVideoPlay: 根据视频时长播放");
-                slideHandler.removeMessages(slideWhat);
-                player.setOnStateChangeListener(BannerX.this);
             }
         }
     }
@@ -197,6 +205,7 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
 
     /**
      * 修改轮播的index
+     * 因为有自动轮播效果，因此需要同步修改自动轮播的index，否则下次轮播会错乱
      * @param nowItemPosition
      */
     private void changeSlideMsg(int nowItemPosition) {
@@ -207,7 +216,8 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
 
     /**
      * 首尾各添一项，无限轮播效果
-     *
+     * 如 5、1、2、3、4、5、1
+     * 当移动到最后一项时，移回第1项，当移动到第0项时，移回倒数第2项
      * @param newBannerData
      * @return
      */
@@ -224,11 +234,11 @@ public class BannerX extends LinearLayout implements LifecycleObserver, BaseVide
      */
     public void setBannerItem(Lifecycle lifecycle, List<BannerItemEntity> newBannerData) {
         if (recyclerView == null || bannerAdapter == null) return;
-        lifecycle.addObserver(this);
-        dataList = addFooterAndHeader(newBannerData);
-        recyclerView.setItemViewCacheSize(dataList.size());
+        lifecycle.addObserver(this);//生命周期感知
+        dataList = addFooterAndHeader(newBannerData);//首尾各添加一项
+        recyclerView.setItemViewCacheSize(dataList.size());//设置recyclerView最大缓存item，否则顺序会错乱
         bannerAdapter.setData(dataList);
-        recyclerView.scrollToPosition(1);
+        recyclerView.scrollToPosition(1);//默认移到第1项
     }
 
     /**
